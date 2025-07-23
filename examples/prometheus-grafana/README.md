@@ -1,32 +1,55 @@
-# 📊 Prometheus + Grafana + AlertManager Stack con Webhook
+# 📊 Stack de Monitoreo Prometheus + Grafana + AlertManager
 
-Stack completo de monitoreo con **Prometheus**, **Grafana**, **AlertManager** y **webhook personalizado** para gestión de alertas en tiempo real.
+Un stack completo de monitoreo con **Prometheus**, **Grafana**, **AlertManager** y aplicación demo con webhook personalizado para gestión de alertas en tiempo real.
 
-## 🏗️ Componentes
+## 🎯 Características Principales
 
-### Core Services
-- **🔍 Prometheus** (`:9090`) - Recolección de métricas y motor de alertas
-- **📊 Grafana** (`:3000`) - Visualización y dashboards (admin/admin123)
-- **🚨 AlertManager** (`:9093`) - Gestión y enrutamiento de alertas
+- ✅ **Monitoreo completo** con métricas del sistema y contenedores
+- 📊 **Visualización avanzada** con Grafana preconfigurado
+- 🚨 **Sistema de alertas inteligente** con webhook personalizado
+- 🐳 **Deployment con Docker Compose** listo para usar
+- 📱 **Dashboard web responsivo** para gestión de alertas
+- 🧪 **Scripts de testing** para verificar funcionalidad
 
-### Data Collection
+## 🏗️ Arquitectura del Sistema
+
+### Servicios Core
+- **🔍 Prometheus** (`:9090`) - Motor de métricas y alertas
+- **📊 Grafana** (`:3000`) - Dashboards y visualización
+- **🚨 AlertManager** (`:9093`) - Gestión de alertas
+
+### Recolección de Métricas
 - **📈 Node Exporter** (`:9100`) - Métricas del sistema host
 - **🐳 cAdvisor** (`:8080`) - Métricas de contenedores Docker
 
-### Demo Application
+### Aplicación Demo
 - **🎯 Demo App** (`:8000`) - App con métricas personalizadas y webhook
 
 ## 🚀 Inicio Rápido
-```bash# Iniciar todos los servicios
+
+### 1. Levantar el Stack
+```bash
+# Clonar e ir al directorio
+cd examples/prometheus-grafana
+
+# Iniciar todos los servicios
 docker compose up -d
-# Verificar estado
+
+# Verificar estado de servicios
 docker compose ps
-# Ver logs
-docker compose logs -f demo-app
 ```
 
-## 🔗 Acceso a Servicios
+### 2. Verificar Servicios
+```bash
+# Ver logs de todos los servicios
+docker compose logs -f
 
+# Ver logs específicos
+docker compose logs demo-app
+docker compose logs prometheus
+```
+
+### 3. Acceder a las Interfaces
 | Servicio | URL | Credenciales |
 |----------|-----|--------------|
 | **Demo App** | http://localhost:8000 | - |
@@ -36,92 +59,75 @@ docker compose logs -f demo-app
 | **Node Exporter** | http://localhost:9100 | - |
 | **cAdvisor** | http://localhost:8080 | - |
 
+## 🎯 Demo App - Funcionalidades
 
-## 🎯 Demo App - Endpoints
+### Endpoints Principales
+```bash
+GET  /                      # Información general y lista de endpoints
+GET  /alerts               # Dashboard web de alertas recibidas
+GET  /alerts/api          # API JSON con estadísticas de alertas
+POST /webhook/alerts      # Webhook endpoint para AlertManager
+GET  /metrics             # Métricas para Prometheus
+GET  /health              # Health check del servicio
+```
 
-### Principales
-- `GET /` - Información general y endpoints disponibles
-- `GET /alerts` - **Dashboard web de alertas recibidas** 🎨
-- `GET /alerts/api` - API JSON con alertas y estadísticas
-- `POST /webhook/alerts` - **Webhook para AlertManager** 🔗
-
-### Métricas y Health
-- `GET /metrics` - Métricas para Prometheus
-- `GET /health` - Health check del servicio
-
-### Simulación (para testing)
-- `GET /simulate/load` - Simular carga de trabajo
-- `GET /simulate/error` - Simular errores aleatorios
-- `GET /simulate/cpu/:seconds` - Simular carga de CPU
-- `GET /simulate/memory` - Simular uso de memoria
+### Simulación para Testing
+```bash
+GET /simulate/load         # Simular carga de trabajo
+GET /simulate/error        # Simular errores aleatorios
+GET /simulate/cpu/:seconds # Simular carga de CPU por X segundos
+GET /simulate/memory       # Simular alto uso de memoria
+```
 
 ## 🚨 Sistema de Alertas
 
-### Reglas Configuradas
+### Reglas de Infraestructura
+- **ContainerDown** - Contenedor no disponible (30s)
+- **HighCpuUsage** - CPU del sistema > 80% (2min)
+- **HighMemoryUsage** - Memoria del sistema > 85% (2min)
+- **LowDiskSpace** - Espacio en disco < 10% (1min)
 
-#### **Infraestructura**
-- `ServiceDown` - Servicio no disponible (30s)
-- `HighCPUUsage` - CPU > 80% (2min)
-- `HighMemoryUsage` - Memoria > 85% (5min)
-- `LowDiskSpace` - Disco < 20% libre (1min)
+### Reglas de Contenedores
+- **ContainerHighCpuUsage** - CPU contenedor > 80% (2min)
+- **ContainerHighMemoryUsage** - Memoria contenedor > 80% (2min)
+- **PrometheusTargetDown** - Target de Prometheus caído (1min)
 
-#### **Contenedores**
-- `ContainerHighCPU` - Contenedor CPU > 80% (2min)
-- `ContainerHighMemory` - Contenedor memoria > 90% (2min)
+### Reglas de Testing del Webhook
+- **WebhookTestAlert** - Se activa con > 3 requests (5s)
+- **DemoAppHighTraffic** - Rate > 0.1 req/s (30s)
+- **DemoAppHighCPU** - CPU demo > 50% (30s)
+- **DemoAppHighMemory** - Memoria demo > 80% (30s)
+- **AlwaysFireAlert** - Alerta siempre activa para testing
 
-#### **Testing del Webhook** 🧪
-- `WebhookTestAlert` - Se activa con > 3 requests (5s)
-- `DemoAppHighTraffic` - Rate > 0.1 req/s (30s)
-- `DemoAppHighCPU` - CPU demo > 50% (30s)
-- `AlwaysFireAlert` - Siempre activa para testing
-
-### Configuración AlertManager
-
-```yaml
-# Enrutamiento de alertas
-route:
-  group_by: ['alertname', 'severity']
-  group_wait: 10s
-  group_interval: 30s
-  repeat_interval: 1h
-  receiver: 'webhook-demo'
-
-# Webhook receiver
-receivers:
-  - name: 'webhook-demo'
-    webhook_configs:
-      - url: 'http://demo-app:3000/webhook/alerts'
-        send_resolved: true
-```
 ## 🧪 Testing del Webhook
 
 ### Método 1: Script Automatizado
 ```bash
-# Usar el script interactivo
+# Ejecutar script interactivo
 ./test-webhook.sh
 
 # Opciones disponibles:
 # 1) Verificar demo app
 # 2) Generar requests (activar alertas)
-# 3) Simular carga
+# 3) Simular carga de CPU/memoria
 # 4) Probar webhook manualmente
-# 5) Mostrar estado
-# 6) Prueba completa
-# 7) Abrir dashboard
+# 5) Mostrar estado actual
+# 6) Prueba completa automática
+# 7) Abrir dashboard de alertas
 ```
 
-### Método 2: Manual
+### Método 2: Testing Manual
 ```bash
 # Generar requests para activar WebhookTestAlert
 for i in {1..5}; do curl http://localhost:8000/; done
 
-# Simular carga de CPU
+# Simular carga de CPU por 10 segundos
 curl http://localhost:8000/simulate/cpu/10
 
-# Simular uso de memoria
+# Simular alto uso de memoria
 curl http://localhost:8000/simulate/memory
 
-# Ver alertas recibidas
+# Ver alertas recibidas en el webhook
 curl http://localhost:8000/alerts/api | jq
 ```
 
@@ -135,149 +141,130 @@ curl -X POST http://localhost:8000/webhook/alerts \
     "status": "firing",
     "alerts": [{
       "status": "firing",
-      "labels": {"alertname": "TestManual", "severity": "warning"},
-      "annotations": {"summary": "Prueba manual del webhook"}
+      "labels": {
+        "alertname": "TestManual",
+        "severity": "warning"
+      },
+      "annotations": {
+        "summary": "Prueba manual del webhook"
+      }
     }]
   }'
 ```
 
-
-
 ## 📊 Dashboard de Alertas
+
 Accede a **http://localhost:8000/alerts** para ver:
 
-- **📈 Estadísticas** - Total, activas, resueltas
-- **🕐 Timeline** - Alertas en tiempo real
-- **🏷️ Detalles** - Labels, anotaciones, timestamps
-- **🔄 Auto-refresh** - Actualización cada 30s
-
-### Características del Dashboard:
-- ✅ **Interfaz web responsiva** con CSS moderno
-- 📱 **Móvil-friendly** con diseño adaptativo
+### Características del Dashboard
+- ✅ **Interfaz web moderna** con diseño responsive
+- 📱 **Compatible con móviles** y tablets
 - 🎨 **Códigos de color** por severidad (crítico/warning/info)
-- 🔄 **Actualización automática** cada 30 segundos
-- 📊 **Estadísticas en tiempo real** con contadores
-- 🔍 **Filtrado visual** por estado (firing/resolved)
+- 🔄 **Auto-refresh** cada 30 segundos
+- 📊 **Estadísticas en tiempo real** (total/activas/resueltas)
+- 🕐 **Timeline de alertas** con timestamps
+- 🏷️ **Detalles completos** de labels y anotaciones
 
 ## 📈 Métricas Disponibles
 
 ### Sistema Operativo (Node Exporter)
-```
-node_cpu_seconds_total          # CPU usage por core
-node_memory_MemTotal_bytes      # Memoria total
+```promql
+node_cpu_seconds_total          # Uso de CPU por core
+node_memory_MemTotal_bytes      # Memoria total del sistema
 node_memory_MemAvailable_bytes  # Memoria disponible
-node_filesystem_size_bytes      # Tamaño del sistema de archivos
-node_filesystem_avail_bytes     # Espacio disponible
-node_load1                      # Load average 1m
+node_filesystem_size_bytes      # Tamaño del filesystem
+node_filesystem_avail_bytes     # Espacio disponible en disco
+node_load1                      # Load average 1 minuto
 node_network_receive_bytes_total # Bytes recibidos por red
 ```
 
 ### Contenedores Docker (cAdvisor)
-```
-container_cpu_usage_seconds_total     # CPU usage del contenedor
+```promql
+container_cpu_usage_seconds_total     # Uso de CPU del contenedor
 container_memory_usage_bytes          # Uso de memoria del contenedor
-container_spec_memory_limit_bytes     # Límite de memoria
-container_network_receive_bytes_total # Tráfico de red
-container_fs_usage_bytes              # Uso del sistema de archivos
+container_spec_memory_limit_bytes     # Límite de memoria configurado
+container_network_receive_bytes_total # Tráfico de red del contenedor
+container_fs_usage_bytes              # Uso del filesystem del contenedor
 ```
 
-### Aplicación Demo (Custom)
-```
+### Demo App (Métricas Personalizadas)
+```promql
 demo_app_http_requests_total          # Total de requests HTTP
-demo_app_http_request_duration_seconds # Duración de requests
-demo_app_active_connections           # Conexiones activas
-demo_app_business_value               # Métrica de negocio personalizada
-```
-
-
-
-
-
-### Contenedores Docker (cAdvisor)
-```
-promqlcontainer_cpu_usage_seconds_total     # CPU usage del contenedor
-container_memory_usage_bytes          # Uso de memoria del contenedor
-container_spec_memory_limit_bytes     # Límite de memoria
-container_network_receive_bytes_total # Tráfico de red
-container_fs_usage_bytes              # Uso del sistema de archivos
-```
-
-### Aplicación Demo (Custom)
-```
-promqldemo_app_requests_total         # Total de requests HTTP
-demo_app_cpu_usage                    # Simulación de uso de CPU
-demo_app_memory_usage                 # Simulación de uso de memoria
-demo_app_response_time_seconds        # Tiempo de respuesta
+demo_app_http_request_duration_seconds # Duración de requests HTTP
+demo_app_active_connections           # Conexiones activas simuladas
+demo_app_business_value              # Métrica de negocio personalizada
+demo_app_cpu_usage                   # Simulación de uso de CPU
+demo_app_memory_usage               # Simulación de uso de memoria
 ```
 
 ## 🔍 Consultas PromQL Útiles
 
-#### Métricas del Sistema
+### Métricas del Sistema
 ```promql
-# CPU usage por instancia
-100 - (avg by(instance) (rate(node_cpu_seconds_total{mode="idle"}[2m])) * 100)
+# CPU usage total del sistema
+100 - (avg(rate(node_cpu_seconds_total{mode="idle"}[2m])) * 100)
 
-# Memoria disponible
+# Memoria disponible en porcentaje
 (1 - (node_memory_MemAvailable_bytes / node_memory_MemTotal_bytes)) * 100
 
-# Espacio en disco usado
+# Espacio usado en disco
 (1 - (node_filesystem_avail_bytes{fstype!="tmpfs"} / node_filesystem_size_bytes{fstype!="tmpfs"})) * 100
 
-# Load average
+# Load average del sistema
 node_load1
 ```
 
-#### Métricas de Contenedores
+### Métricas de Contenedores
 ```promql
-# CPU usage de contenedores
+# Rate de CPU por contenedor
 rate(container_cpu_usage_seconds_total{name!=""}[1m])
 
-# Memoria usage de contenedores
+# Uso de memoria por contenedor en porcentaje
 (container_memory_usage_bytes{name!=""} / container_spec_memory_limit_bytes{name!=""}) * 100
 
-# Tráfico de red
+# Tráfico de red por contenedor
 rate(container_network_receive_bytes_total{name!=""}[1m])
 ```
 
 ### Métricas de la Demo App
 ```promql
-# Rate de requests HTTPrate(demo_app_requests_total[1m])
+# Rate de requests HTTP
+rate(demo_app_http_requests_total[1m])
 
-# CPU simulado
-demo_app_cpu_usage
+# Percentil 95 de latencia
+histogram_quantile(0.95, rate(demo_app_http_request_duration_seconds_bucket[5m]))
 
-# Memoria simulada
-demo_app_memory_usage
+# Conexiones activas
+demo_app_active_connections
+
+# Métrica de negocio
+demo_app_business_value
 ```
-
 
 ## 📁 Estructura del Proyecto
 
 ```
 prometheus-grafana/
-├── alertmanager/
-│   └── alertmanager.yml        # Configuración de AlertManager
-├── demo-app/
-│   ├── app.js                  # Aplicación de demo con métricas
-│   ├── package.json            # Dependencias Node.js
-│   └── Dockerfile              # Imagen de la demo app
-├── grafana/
-│   ├── provisioning/
-│   │   ├── datasources/
-│   │   │   └── prometheus.yml  # Datasource automático
-│   │   └── dashboards/
-│   │       └── dashboard.yml   # Configuración de dashboards
-│   └── dashboards/             # Dashboards personalizados
+├── docker-compose.yml              # Orquestación de todos los servicios
 ├── prometheus/
-│   ├── prometheus.yml          # Configuración principal
+│   ├── prometheus.yml              # Configuración principal de Prometheus
 │   └── rules/
-│       └── alerts.yml          # Reglas de alertas
-├── docker-compose.yml          # Orquestación completa
-└── README.md                   # Esta documentación
+│       └── alerts.yml              # Reglas de alertas personalizadas
+├── alertmanager/
+│   └── alertmanager.yml           # Configuración de AlertManager
+├── grafana/
+│   └── provisioning/              # Configuración automática de Grafana
+│       ├── datasources/           # Configuración de datasources
+│       └── dashboards/            # Dashboards predefinidos
+├── demo-app/
+│   ├── app.js                     # Aplicación Node.js con webhook
+│   ├── package.json               # Dependencias de la aplicación
+│   └── Dockerfile                 # Imagen de la demo app
+├── test-webhook.sh                # Script de testing del webhook
+└── README.md                      # Esta documentación
 ```
 
-
-## 🔧 Configuración Avanzada
+## ⚙️ Configuración Avanzada
 
 ### Personalizar Alertas
 Editar `prometheus/rules/alerts.yml`:
@@ -292,17 +279,10 @@ groups:
           severity: warning
         annotations:
           summary: "Mi alerta personalizada"
+          description: "Descripción detallada de la alerta"
 ```
 
-### Webhook PersonalizadoLa demo app incluye un webhook completo que:
-- ✅ Recibe alertas de AlertManager
-- 💾 Almacena historial en memoria
-- 📊 Proporciona API REST para consultas
-- 🎨 Incluye dashboard web interactivo
-- 📝 Registra logs detallados
-
-### Agregar nuevos targets a Prometheus
-
+### Agregar Nuevos Targets
 Editar `prometheus/prometheus.yml`:
 ```yaml
 scrape_configs:
@@ -313,8 +293,7 @@ scrape_configs:
     metrics_path: /metrics
 ```
 
-### Configurar notificaciones por email
-
+### Configurar Notificaciones por Email
 Editar `alertmanager/alertmanager.yml`:
 ```yaml
 global:
@@ -328,144 +307,196 @@ receivers:
     email_configs:
       - to: 'admin@example.com'
         subject: 'Alert: {{ .GroupLabels.alertname }}'
-```
-  
-  ## 🛠️ Troubleshooting
-  
-  ### Verificar Estado de Servicios```bash# Estado de contenedoresdocker compose ps# Logs de servicios específicosdocker compose logs prometheusdocker compose logs alertmanagerdocker compose logs demo-app# Verificar targets en Prometheuscurl http://localhost:9090/api/v1/targets | jq```
-
-### Problemas Comunes**1. Alertas no se envían al webhook:**- Verificar configuración en AlertManager: http://localhost:9093- Revisar logs: `docker compose logs alertmanager`- Confirmar que demo-app esté disponible**2. Métricas no aparecen:**- Verificar targets en Prometheus: http://localhost:9090/targets- Revisar conectividad de red entre contenedores- Verificar puertos expuestos**3. Webhook no recibe alertas:**- Verificar endpoint: `curl http://localhost:8000/webhook/alerts`- Revisar logs de demo-app: `docker compose logs demo-app`- Confirmar configuración de AlertManager**4. Prometheus no puede hacer scraping:**```bash# Verificar conectividad de reddocker compose exec prometheus wget -O- http://node-exporter:9100/metrics# Verificar configuracióndocker compose exec prometheus promtool check config /etc/prometheus/prometheus.yml# Ver logsdocker compose logs prometheus```**5. Grafana no muestra datos:**
-
-```bash# 
-Verificar datasourcecurl http://localhost:3000/api/datasources# 
-Verificar conectividad a Prometheus desde Grafana
-docker compose exec grafana 
-wget -O- http://prometheus:9090/api/v1/label/__name__/values# Ver logsdocker compose logs grafana
+        body: |
+          {{ range .Alerts }}
+          Alert: {{ .Annotations.summary }}
+          Description: {{ .Annotations.description }}
+          {{ end }}
 ```
 
-## 📊 Dashboards Recomendados### Para importar en Grafana (Dashboard ID):- **1860**: Node Exporter Full- **893**: Docker and System Monitoring- **315**: Kubernetes cluster monitoring- **11074**: Node Exporter for Prometheus### Crear Dashboards Personalizados```bash# En Grafana, ir a + > Import# Usar los IDs arriba o crear dashboards personalizados```## 🎯 Testing Completo### Generar carga en la Demo App```bash# Requests normalesfor i in {1..100}; do curl http://localhost:8000/ & done
+## 🛠️ Troubleshooting
 
-# Simular carga con delay
-curl http://localhost:8000/simulate/load
+### Verificar Estado de Servicios
+```bash
+# Estado de todos los contenedores
+docker compose ps
 
-# Simular errores
-curl http://localhost:8000/simulate/error
+# Logs de servicios específicos
+docker compose logs prometheus
+docker compose logs alertmanager
+docker compose logs demo-app
 
-# Generar carga de CPU
-curl http://localhost:8000/simulate/cpu/5
+# Verificar health checks
+docker compose logs | grep health
+```
 
-# Ver métricas en tiempo real
+### Problemas Comunes
+
+**1. Alertas no llegan al webhook:**
+```bash
+# Verificar configuración de AlertManager
+curl http://localhost:9093/api/v1/status
+
+# Verificar conectividad al webhook
+curl -X POST http://localhost:8000/webhook/alerts -d '{}'
+
+# Ver logs de AlertManager
+docker compose logs alertmanager
+```
+
+**2. Métricas no aparecen en Prometheus:**
+```bash
+# Verificar targets
+curl http://localhost:9090/api/v1/targets
+
+# Verificar configuración
+docker compose exec prometheus promtool check config /etc/prometheus/prometheus.yml
+
+# Verificar reglas de alertas
+docker compose exec prometheus promtool check rules /etc/prometheus/rules/alerts.yml
+```
+
+**3. Grafana no muestra datos:**
+```bash
+# Verificar datasource
+curl http://localhost:3000/api/datasources
+
+# Verificar conectividad desde Grafana a Prometheus
+docker compose exec grafana wget -O- http://prometheus:9090/api/v1/label/__name__/values
+
+# Ver logs de Grafana
+docker compose logs grafana
+```
+
+**4. Demo app no responde:**
+```bash
+# Verificar salud de la aplicación
+curl http://localhost:8000/health
+
+# Ver métricas de la aplicación
 curl http://localhost:8000/metrics
 
-# Generar tráfico continuo
-while true; do curl -s http://localhost:8000/ > /dev/null; sleep 1; done
+# Verificar logs de la aplicación
+docker compose logs demo-app
 ```
 
-## 🎓 Recursos de Aprendizaje
+## 🔧 Comandos Útiles
 
-### Prometheus
-- **Targets**: http://localhost:9090/targets
-- **Rules**: http://localhost:9090/rules
-- **Alerts**: http://localhost:9090/alerts
-- **Graph**: http://localhost:9090/graph
-
-### Grafana
-- **Datasources**: Configuración automática vía provisioning
-- **Dashboards**: Importar desde Grafana.com
-- **Usuarios**: admin/admin123 (cambiar en producción)
-
-### AlertManager
-- **Config**: http://localhost:9093/#/status
-- **Alerts**: http://localhost:9093/#/alerts
-- **Silences**: Gestión de silencios
-
-## 📚 Casos de Uso Comunes
-
-### Monitoreo de Aplicaciones
-1. Instrumentar app con prom-client
-2. Exponer endpoint /metrics
-3. Agregar a prometheus.yml
-4. Crear dashboard en Grafana
-5. Configurar alertas específicas
-
-### Monitoreo de Infraestructura
-1. Instalar node-exporter en cada host
-2. Configurar service discovery
-3. Crear dashboards por datacenter
-4. Alertas por umbrales críticos
-
-### Monitoring de Docker
-1. Usar cAdvisor para métricas de contenedores
-2. Crear alertas por uso de recursos
-3. Dashboard de estado de servicios
-4. Logs centralizados
-
-## 🔄 Mantenimiento
-
-### Backup de configuraciones
+### Gestión del Stack
 ```bash
-# Backup de Grafana
-docker compose exec grafana tar -czf /tmp/grafana-backup.tar.gz /var/lib/grafana
-
-# Backup de Prometheus
-docker compose exec prometheus tar -czf /tmp/prometheus-backup.tar.gz /prometheus
-```
-
-### Limpieza de datos antiguos
-```bash
-# Los datos se limpian automáticamente según retention (30d)
-# Para limpiar manualmente:
-docker compose down
-docker volume rm prometheus-grafana_prometheus_data
+# Iniciar servicios en background
 docker compose up -d
-```
 
-### Actualización de versiones
-```bash
-# Editar docker-compose.yml con nuevas versiones
-# Reconstruir servicios
-docker compose build
-docker compose up -d
-```
-
-## 🚀 Próximos Pasos
-
-1. **Configurar dashboards personalizados** en Grafana
-2. **Agregar más receivers** (Slack, PagerDuty, etc.)
-3. **Implementar persistencia** para el webhook
-4. **Configurar autenticación** y SSL/TLS
-5. **Escalar horizontalmente** con federación de Prometheus
-
-## 🔄 Limpieza
-
-```bash
-# Parar servicios
+# Parar todos los servicios
 docker compose down
 
-# Eliminar volúmenes (CUIDADO: borra métricas históricas)
+# Reiniciar un servicio específico
+docker compose restart demo-app
+
+# Ver recursos utilizados
+docker compose top
+
+# Limpiar volúmenes (⚠️ elimina datos)
 docker compose down -v
-
-# Eliminar imágenes
-docker rmi $(docker images "prometheus-grafana*" -q)
 ```
 
-## 📖 Recursos Adicionales
+### Testing y Debugging
+```bash
+# Generar carga continua
+while true; do curl -s http://localhost:8000/ > /dev/null; sleep 1; done
 
+# Ver alertas activas en Prometheus
+curl http://localhost:9090/api/v1/alerts | jq
+
+# Ver configuración de AlertManager
+curl http://localhost:9093/api/v1/status | jq
+
+# Verificar estado del webhook
+curl http://localhost:8000/alerts/api | jq
+```
+
+### Monitoreo en Tiempo Real
+```bash
+# Ver logs en tiempo real
+docker compose logs -f demo-app
+
+# Monitorear métricas
+watch -n 2 'curl -s http://localhost:8000/metrics | grep demo_app'
+
+# Ver alertas recibidas
+watch -n 5 'curl -s http://localhost:8000/alerts/api | jq ".total, .firing, .resolved"'
+```
+
+## 📚 Recursos de Aprendizaje
+
+### Interfaces Web
+- **Prometheus UI**: http://localhost:9090
+  - Targets: `/targets`
+  - Rules: `/rules`
+  - Alerts: `/alerts`
+  - Graph: `/graph`
+
+- **AlertManager UI**: http://localhost:9093
+  - Status: `/#/status`
+  - Alerts: `/#/alerts`
+  - Silences: `/#/silences`
+
+- **Grafana**: http://localhost:3000
+  - Usuario: `admin`
+  - Contraseña: `admin123`
+
+### Documentación Oficial
 - [Prometheus Documentation](https://prometheus.io/docs/)
 - [Grafana Documentation](https://grafana.com/docs/)
-- [PromQL Tutorial](https://prometheus.io/docs/prometheus/latest/querying/basics/)
-- [AlertManager Guide](https://prometheus.io/docs/alerting/latest/alertmanager/)
-- [cAdvisor Documentation](https://github.com/google/cadvisor)
+- [AlertManager Documentation](https://prometheus.io/docs/alerting/latest/alertmanager/)
+
+## 🎯 Casos de Uso
+
+### Monitoreo de Aplicaciones
+1. Instrumentar aplicación con métricas Prometheus
+2. Configurar scraping en `prometheus.yml`
+3. Crear alertas específicas para la aplicación
+4. Configurar dashboards en Grafana
+
+### Alertas Críticas
+1. Definir umbrales críticos en `alerts.yml`
+2. Configurar múltiples canales de notificación
+3. Implementar escalamiento de alertas
+4. Crear runbooks para respuesta a incidentes
+
+### Análisis de Performance
+1. Usar métricas de latencia y throughput
+2. Crear dashboards para análisis histórico
+3. Configurar alertas proactivas
+4. Implementar SLI/SLO monitoring
+
+## 🔒 Consideraciones de Seguridad
+
+### Para Producción
+- Cambiar credenciales por defecto de Grafana
+- Configurar HTTPS para todas las interfaces
+- Implementar autenticación y autorización
+- Configurar network policies restrictivas
+- Usar secrets para credenciales sensibles
+
+### Ejemplo de Configuración Segura
+```yaml
+# En docker-compose.yml para producción
+environment:
+  - GF_SECURITY_ADMIN_PASSWORD=${GRAFANA_ADMIN_PASSWORD}
+  - GF_SECURITY_SECRET_KEY=${GRAFANA_SECRET_KEY}
+secrets:
+  - grafana_admin_password
+  - alertmanager_smtp_password
+```
 
 ---
 
-¡El stack está listo para monitorear tu infraestructura! 🎉
+## 📞 Soporte
 
-**Comando rápido para ver todo funcionando:**
-```bash
-./test-webhook.sh
-# Selecciona opción 6 para prueba completa
-# Luego visita: http://localhost:8000/alerts
-```
+Este proyecto es parte de los ejemplos de Docker. Para preguntas o problemas:
+- Revisar la sección de [Troubleshooting](#🛠️-troubleshooting)
+- Verificar logs con `docker compose logs [servicio]`
+- Probar conectividad con los comandos de testing
 
-**¡Disfruta monitoreando con Prometheus y Grafana!** 📊
+**¡Happy Monitoring!** 📊🚀
