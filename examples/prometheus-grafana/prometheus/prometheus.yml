@@ -1,0 +1,18 @@
+# Archivo de configuración de Prometheus
+
+global:
+  scrape_interval: 15s  # Intervalo para recopilar métricas, en segundos
+  evaluation_interval: 15s  # Intervalo para evaluar las reglas de alerta, en segundos
+
+# Definición de los trabajos de scrapeo (scrape jobs)
+scrape_configs:
+  # Trabajo para obtener métricas de Node Exporter
+  - job_name: 'node-exporter'
+    static_configs:
+      - targets: ['node-exporter:9100']  # Nombre del contenedor y puerto del Node Exporter
+
+  # Trabajo para obtener métricas de Prometheus (su propio estado)
+  - job_name: 'prometheus'
+    static_configs:
+      - targets: ['prometheus:9090']  # Nombre del contenedor y puerto de Prometheus
+
