@@ -1,0 +1,106 @@
+version: '3.8'
+
+services:
+  # Aplicación principal de desarrollo
+  app:
+    build:
+      context: ./app
+      dockerfile: Dockerfile
+    container_name: dev-environment-app
+    restart: unless-stopped
+    ports:
+      - "3000:3000"    # Puerto de la aplicación
+      - "9229:9229"    # Puerto del debugger de Node.js
+    volumes:
+      # Hot reload - montar código fuente
+      - ./app:/app
+      # Evitar que node_modules se monte desde el host
+      - /app/node_modules
+      # Montar archivo de variables de entorno
+      - ./app/.env:/app/.env:ro
+    environment:
+      - NODE_ENV=development
+      - DEBUG=*
+      - CHOKIDAR_USEPOLLING=true  # Para hot reload en algunos sistemas
+      - DATABASE_URL=postgresql://dev:dev@db:5432/devdb
+      - API_KEY=dev-super-secret-key
+    command: npm run dev
+    depends_on:
+      db:
+        condition: service_healthy
+    networks:
+      - dev-network
+    healthcheck:
+      test: ["CMD", "curl", "-f", "http://localhost:3000/health"]
+      interval: 30s
+      timeout: 10s
+      retries: 3
+      start_period: 40s
+
+  # Base de datos PostgreSQL para desarrollo
+  db:
+    image: postgres:15-alpine
+    container_name: dev-environment-db
+    restart: unless-stopped
+    ports:
+      - "5432:5432"
+    environment:
+      POSTGRES_DB: devdb
+      POSTGRES_USER: dev
+      POSTGRES_PASSWORD: dev
+      POSTGRES_INITDB_ARGS: "--encoding=UTF-8"
+    volumes:
+      - postgres_data:/var/lib/postgresql/data
+      - ./db/init.sql:/docker-entrypoint-initdb.d/init.sql:ro
+    networks:
+      - dev-network
+    healthcheck:
+      test: ["CMD-SHELL", "pg_isready -U dev -d devdb"]
+      interval: 30s
+      timeout: 10s
+      retries: 3
+      start_period: 30s
+
+  # Adminer - Interfaz web para la base de datos
+  adminer:
+    image: adminer:latest
+    container_name: dev-environment-adminer
+    restart: unless-stopped
+    ports:
+      - "8080:8080"
+    environment:
+      ADMINER_DEFAULT_SERVER: db
+    depends_on:
+      db:
+        condition: service_healthy
+    networks:
+      - dev-network
+
+  # Redis para cache en desarrollo
+  redis:
+    image: redis:7-alpine
+    container_name: dev-environment-redis
+    restart: unless-stopped
+    ports:
+      - "6379:6379"
+    volumes:
+      - redis_data:/data
+    command: redis-server --appendonly yes
+    networks:
+      - dev-network
+    healthcheck:
+      test: ["CMD", "redis-cli", "ping"]
+      interval: 30s
+      timeout: 10s
+      retries: 3
+
+volumes:
+  postgres_data:
+    driver: local
+  redis_data:
+    driver: local
+
+networks:
+  dev-network:
+    driver: bridge
+    name: dev-environment-network

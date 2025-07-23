@@ -1,0 +1,226 @@
+<!DOCTYPE html>
+<html lang="es">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>Entorno de Desarrollo Docker</title>
+    <style>
+        * { margin: 0; padding: 0; box-sizing: border-box; }
+        body {
+            font-family: 'Segoe UI', Tahoma, Geneva, Verdana, sans-serif;
+            background: linear-gradient(135deg, #667eea 0%, #764ba2 100%);
+            min-height: 100vh;
+            color: #333;
+        }
+        .container {
+            max-width: 1200px;
+            margin: 0 auto;
+            padding: 20px;
+        }
+        .header {
+            text-align: center;
+            color: white;
+            margin-bottom: 40px;
+        }
+        .header h1 {
+            font-size: 3em;
+            margin-bottom: 10px;
+        }
+        .cards {
+            display: grid;
+            grid-template-columns: repeat(auto-fit, minmax(300px, 1fr));
+            gap: 20px;
+            margin-bottom: 40px;
+        }
+        .card {
+            background: white;
+            border-radius: 15px;
+            padding: 25px;
+            box-shadow: 0 10px 30px rgba(0,0,0,0.1);
+            transition: transform 0.3s ease;
+        }
+        .card:hover {
+            transform: translateY(-5px);
+        }
+        .card h3 {
+            color: #667eea;
+            margin-bottom: 15px;
+            font-size: 1.3em;
+        }
+        .endpoints {
+            background: white;
+            border-radius: 15px;
+            padding: 25px;
+            box-shadow: 0 10px 30px rgba(0,0,0,0.1);
+        }
+        .endpoint {
+            display: flex;
+            align-items: center;
+            margin-bottom: 15px;
+            padding: 10px;
+            background: #f8f9fa;
+            border-radius: 8px;
+        }
+        .method {
+            padding: 5px 10px;
+            border-radius: 5px;
+            color: white;
+            font-weight: bold;
+            margin-right: 15px;
+            min-width: 60px;
+            text-align: center;
+        }
+        .get { background: #28a745; }
+        .post { background: #007bff; }
+        .put { background: #ffc107; color: #333; }
+        .delete { background: #dc3545; }
+        .url { font-family: monospace; color: #667eea; }
+        .status {
+            display: grid;
+            grid-template-columns: repeat(auto-fit, minmax(150px, 1fr));
+            gap: 15px;
+            margin-top: 20px;
+        }
+        .status-item {
+            text-align: center;
+            padding: 15px;
+            background: rgba(255,255,255,0.1);
+            border-radius: 10px;
+            color: white;
+        }
+        .status-value {
+            font-size: 1.5em;
+            font-weight: bold;
+            display: block;
+        }
+    </style>
+</head>
+<body>
+    <div class="container">
+        <div class="header">
+            <h1>🐳 Entorno de Desarrollo</h1>
+            <p>Docker + Node.js + PostgreSQL + Redis</p>
+        </div>
+
+        <div class="cards">
+            <div class="card">
+                <h3>🚀 Características</h3>
+                <ul>
+                    <li>✅ Hot reload con nodemon</li>
+                    <li>✅ PostgreSQL con datos de prueba</li>
+                    <li>✅ Redis para cache</li>
+                    <li>✅ Debugging remoto</li>
+                    <li>✅ Variables de entorno</li>
+                    <li>✅ Interfaz web Adminer</li>
+                </ul>
+            </div>
+
+            <div class="card">
+                <h3>🔧 Servicios</h3>
+                <ul>
+                    <li><strong>App:</strong> http://localhost:3000</li>
+                    <li><strong>DB Admin:</strong> http://localhost:8080</li>
+                    <li><strong>PostgreSQL:</strong> localhost:5432</li>
+                    <li><strong>Redis:</strong> localhost:6379</li>
+                    <li><strong>Debug:</strong> localhost:9229</li>
+                </ul>
+            </div>
+
+            <div class="card">
+                <h3>📊 Estado del Sistema</h3>
+                <div id="system-status">
+                    <p>Cargando estado...</p>
+                </div>
+            </div>
+        </div>
+
+        <div class="endpoints">
+            <h3>🌐 Endpoints Disponibles</h3>
+            <div class="endpoint">
+                <span class="method get">GET</span>
+                <span class="url">/</span>
+                <span> - Información principal</span>
+            </div>
+            <div class="endpoint">
+                <span class="method get">GET</span>
+                <span class="url">/dev/info</span>
+                <span> - Información del entorno</span>
+            </div>
+            <div class="endpoint">
+                <span class="method get">GET</span>
+                <span class="url">/api/tasks</span>
+                <span> - Listar tareas</span>
+            </div>
+            <div class="endpoint">
+                <span class="method post">POST</span>
+                <span class="url">/api/tasks</span>
+                <span> - Crear nueva tarea</span>
+            </div>
+            <div class="endpoint">
+                <span class="method put">PUT</span>
+                <span class="url">/api/tasks/:id</span>
+                <span> - Actualizar tarea</span>
+            </div>
+            <div class="endpoint">
+                <span class="method delete">DELETE</span>
+                <span class="url">/api/tasks/:id</span>
+                <span> - Eliminar tarea</span>
+            </div>
+            <div class="endpoint">
+                <span class="method get">GET</span>
+                <span class="url">/health</span>
+                <span> - Health check</span>
+            </div>
+        </div>
+
+        <div class="status" id="status-grid">
+            <!-- Se llena dinámicamente -->
+        </div>
+    </div>
+
+    <script>
+        // Función para obtener información del sistema
+        async function updateSystemInfo() {
+            try {
+                const response = await fetch('/dev/info');
+                const data = await response.json();
+                
+                document.getElementById('system-status').innerHTML = `
+                    <p><strong>Node.js:</strong> ${data.environment.node_version}</p>
+                    <p><strong>Plataforma:</strong> ${data.environment.platform}</p>
+                    <p><strong>Uptime:</strong> ${Math.floor(data.environment.uptime)}s</p>
+                    <p><strong>Entorno:</strong> ${data.environment.environment}</p>
+                `;
+
+                document.getElementById('status-grid').innerHTML = `
+                    <div class="status-item">
+                        <span class="status-value">${data.environment.environment}</span>
+                        <span>Entorno</span>
+                    </div>
+                    <div class="status-item">
+                        <span class="status-value">${Math.floor(data.environment.uptime)}s</span>
+                        <span>Uptime</span>
+                    </div>
+                    <div class="status-item">
+                        <span class="status-value">${data.docker.containerized ? 'Sí' : 'No'}</span>
+                        <span>Docker</span>
+                    </div>
+                    <div class="status-item">
+                        <span class="status-value">${Math.round(data.environment.memory_usage.rss / 1024 / 1024)}MB</span>
+                        <span>Memoria RSS</span>
+                    </div>
+                `;
+            } catch (error) {
+                console.error('Error obteniendo información del sistema:', error);
+                document.getElementById('system-status').innerHTML = '<p>Error cargando información</p>';
+            }
+        }
+
+        // Actualizar información al cargar la página
+        updateSystemInfo();
+
+        // Actualizar cada 30 segundos
+        setInterval(updateSystemInfo, 30000);
+    </script>
+</body>
+</html>

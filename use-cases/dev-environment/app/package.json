@@ -1,0 +1,47 @@
+{
+  "name": "docker-dev-environment",
+  "version": "1.2.0",
+  "description": "Entorno de desarrollo completo con Docker, hot-reload y herramientas de desarrollo",
+  "main": "app.js",
+  "scripts": {
+    "start": "node app.js",
+    "dev": "nodemon app.js",
+    "dev:watch": "nodemon --watch . --ext js,json --exec npm start",
+    "debug": "nodemon --inspect=0.0.0.0:9229 app.js",
+    "test": "echo \"Ejecutando tests...\" && node app.js --test",
+    "lint": "echo \"Ejecutando linter...\"",
+    "logs": "docker-compose logs -f"
+  },
+  "dependencies": {
+    "express": "^4.18.2",
+    "cors": "^2.8.5",
+    "dotenv": "^16.3.1"
+  },
+  "devDependencies": {
+    "nodemon": "^3.0.1",
+    "@types/node": "^20.5.0"
+  },
+  "keywords": [
+    "docker",
+    "nodejs",
+    "development",
+    "express",
+    "hot-reload"
+  ],
+  "author": "Docker Examples",
+  "license": "MIT",
+  "engines": {
+    "node": ">=18.0.0"
+  },
+  "nodemonConfig": {
+    "watch": [
+      "."
+    ],
+    "ext": "js,json",
+    "ignore": [
+      "node_modules/",
+      "*.test.js"
+    ],
+    "delay": "1000"
+  }
+}
