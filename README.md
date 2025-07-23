@@ -4,13 +4,13 @@
 
 ## 📋 Tabla de Contenidos
 
-- [Prerrequisitos](#prerrequisitos)
-- [Estructura del Proyecto](#estructura-del-proyecto)
-- [Ejemplos Disponibles](#ejemplos-disponibles)
-- [Casos de Uso](#casos-de-uso)
-- [Cómo Usar Este Repositorio](#cómo-usar-este-repositorio)
-- [Contribuir](#contribuir)
-- [Recursos Adicionales](#recursos-adicionales)
+- [Prerrequisitos](#-prerrequisitos)
+- [Estructura del Proyecto](#-estructura-del-proyecto)
+- [Ejemplos Disponibles](#-ejemplos-disponibles)
+- [Casos de Uso](#-casos-de-uso)
+- [Cómo Usar Este Repositorio](#-cómo-usar-este-repositorio)
+- [Contribuir](#-contribuir)
+- [Recursos Adicionales](#-recursos-adicionales)
 
 ## 🛠 Prerrequisitos
 
@@ -33,17 +33,35 @@ Esta guía incluye:
 ```
 Docker-Examples/
 ├── README.md
-├── examples/          # Ejemplos prácticos básicos
-│   └── simple-web-app/ # Aplicación web simple
-└── use-cases/         # Casos de uso avanzados
+├── examples/                    # Ejemplos prácticos básicos
+│   ├── simple-web-app/         # Aplicación web simple con Nginx
+│   ├── multi-container/        # App multi-contenedor (Frontend + Backend)
+│   └── node-mongo-app/         # Node.js + MongoDB + Docker
+└── use-cases/                  # Casos de uso avanzados
 ```
 
 ## 🚀 Ejemplos Disponibles
 
 ### Aplicaciones Básicas
-- **Simple Web App**: Ejemplo básico de una aplicación web containerizada
 
-*Más ejemplos próximamente...*
+- **[Simple Web App](./examples/simple-web-app/)**: Ejemplo básico de una aplicación web containerizada con Nginx
+  - Tecnologías: HTML, Nginx, Docker
+  - Nivel: Principiante
+  - Aprende: Conceptos básicos de containerización
+
+### Aplicaciones Multi-Contenedor
+
+- **[Multi-Container App](./examples/multi-container/)**: Comunicación entre frontend y backend
+  - Tecnologías: HTML/JS, Node.js, Express, Docker Compose
+  - Nivel: Intermedio
+  - Aprende: Redes Docker, comunicación entre contenedores
+
+### Aplicaciones con Base de Datos
+
+- **[Node.js + MongoDB](./examples/node-mongo-app/)**: API REST completa con persistencia
+  - Tecnologías: Node.js, Express, MongoDB, Mongoose
+  - Nivel: Intermedio-Avanzado
+  - Aprende: Persistencia de datos, API REST, ODM
 
 ## 🎯 Casos de Uso
 
