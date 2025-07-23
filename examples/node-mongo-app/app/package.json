@@ -1,0 +1,31 @@
+{
+  "name": "node-mongo-app",
+  "version": "1.0.0",
+  "description": "Aplicación Node.js con MongoDB usando Docker",
+  "main": "app.js",
+  "scripts": {
+    "start": "node app.js",
+    "dev": "nodemon app.js",
+    "test": "echo \"Error: no test specified\" && exit 1"
+  },
+  "keywords": [
+    "docker",
+    "express",
+    "mongodb",
+    "mongoose",
+    "node",
+    "api"
+  ],
+  "author": "Harol Reina",
+  "license": "MIT",
+  "dependencies": {
+    "express": "^4.18.2",
+    "mongoose": "^7.5.0"
+  },
+  "devDependencies": {
+    "nodemon": "^3.0.1"
+  },
+  "engines": {
+    "node": ">=18.0.0"
+  }
+}
