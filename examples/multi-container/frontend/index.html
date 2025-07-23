@@ -1,0 +1,327 @@
+<!DOCTYPE html>
+<html lang="es">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>Multi-Container App - Frontend</title>
+    <style>
+        * {
+            margin: 0;
+            padding: 0;
+            box-sizing: border-box;
+        }
+
+        body {
+            font-family: 'Segoe UI', Tahoma, Geneva, Verdana, sans-serif;
+            background: linear-gradient(135deg, #667eea 0%, #764ba2 100%);
+            min-height: 100vh;
+            display: flex;
+            flex-direction: column;
+            justify-content: center;
+            align-items: center;
+            color: #333;
+        }
+
+        .container {
+            background: white;
+            padding: 2rem;
+            border-radius: 15px;
+            box-shadow: 0 20px 40px rgba(0,0,0,0.1);
+            text-align: center;
+            max-width: 600px;
+            width: 90%;
+        }
+
+        h1 {
+            color: #667eea;
+            margin-bottom: 1rem;
+            font-size: 2.5rem;
+        }
+
+        .subtitle {
+            color: #666;
+            margin-bottom: 2rem;
+            font-size: 1.1rem;
+        }
+
+        .api-section {
+            background: #f8f9fa;
+            padding: 1.5rem;
+            border-radius: 10px;
+            margin: 1.5rem 0;
+            border-left: 4px solid #667eea;
+        }
+
+        .btn {
+            background: linear-gradient(135deg, #667eea 0%, #764ba2 100%);
+            color: white;
+            border: none;
+            padding: 12px 30px;
+            border-radius: 25px;
+            font-size: 1rem;
+            cursor: pointer;
+            transition: all 0.3s ease;
+            margin: 10px;
+        }
+
+        .btn:hover {
+            transform: translateY(-2px);
+            box-shadow: 0 10px 20px rgba(0,0,0,0.2);
+        }
+
+        .btn:disabled {
+            background: #ccc;
+            cursor: not-allowed;
+            transform: none;
+        }
+
+        .response {
+            margin-top: 1rem;
+            padding: 1rem;
+            border-radius: 8px;
+            border: 1px solid #ddd;
+            background: #fff;
+            min-height: 50px;
+            text-align: left;
+        }
+
+        .success {
+            border-color: #28a745;
+            background: #f8fff9;
+            color: #155724;
+        }
+
+        .error {
+            border-color: #dc3545;
+            background: #fff8f8;
+            color: #721c24;
+        }
+
+        .loading {
+            border-color: #007bff;
+            background: #f8f9ff;
+            color: #004085;
+        }
+
+        .status-indicator {
+            display: inline-block;
+            width: 12px;
+            height: 12px;
+            border-radius: 50%;
+            margin-right: 8px;
+        }
+
+        .status-online {
+            background: #28a745;
+            animation: pulse 2s infinite;
+        }
+
+        .status-offline {
+            background: #dc3545;
+        }
+
+        .status-checking {
+            background: #ffc107;
+            animation: blink 1s infinite;
+        }
+
+        @keyframes pulse {
+            0% { opacity: 1; }
+            50% { opacity: 0.5; }
+            100% { opacity: 1; }
+        }
+
+        @keyframes blink {
+            0% { opacity: 1; }
+            50% { opacity: 0.3; }
+            100% { opacity: 1; }
+        }
+
+        .info-grid {
+            display: grid;
+            grid-template-columns: repeat(auto-fit, minmax(250px, 1fr));
+            gap: 1rem;
+            margin-top: 2rem;
+        }
+
+        .info-card {
+            background: #f8f9fa;
+            padding: 1rem;
+            border-radius: 8px;
+            border-left: 3px solid #667eea;
+        }
+
+        .info-card h3 {
+            color: #667eea;
+            margin-bottom: 0.5rem;
+            font-size: 1.1rem;
+        }
+
+        .info-card p {
+            color: #666;
+            font-size: 0.9rem;
+        }
+
+        .endpoint-info {
+            background: #e9ecef;
+            padding: 0.5rem;
+            border-radius: 5px;
+            font-family: 'Courier New', monospace;
+            font-size: 0.9rem;
+            margin: 0.5rem 0;
+        }
+    </style>
+</head>
+<body>
+    <div class="container">
+        <h1>🐳 Multi-Container App</h1>
+        <p class="subtitle">Frontend conectándose al Backend via Docker Compose</p>
+        
+        <div class="api-section">
+            <h3>🔗 Estado del Backend</h3>
+            <p>
+                <span id="status-indicator" class="status-indicator status-checking"></span>
+                <span id="status-text">Verificando conexión...</span>
+            </p>
+            <div class="endpoint-info">
+                Backend URL: http://localhost:3000/api
+            </div>
+        </div>
+
+        <div class="api-section">
+            <h3>🚀 Probar Conexión con Backend</h3>
+            <button id="testBtn" class="btn" onclick="testBackend()">
+                📡 Hacer Petición al Backend
+            </button>
+            <button id="refreshBtn" class="btn" onclick="checkBackendStatus()">
+                🔄 Verificar Estado
+            </button>
+            
+            <div id="response" class="response">
+                Haz clic en "Hacer Petición al Backend" para probar la conexión...
+            </div>
+        </div>
+
+        <div class="info-grid">
+            <div class="info-card">
+                <h3>🖥️ Frontend</h3>
+                <p>Nginx sirviendo contenido estático</p>
+                <p><strong>Puerto:</strong> 8080</p>
+            </div>
+            <div class="info-card">
+                <h3>⚙️ Backend</h3>
+                <p>Node.js + Express API</p>
+                <p><strong>Puerto:</strong> 3000</p>
+            </div>
+            <div class="info-card">
+                <h3>🌐 Comunicación</h3>
+                <p>Contenedores conectados via Docker Compose</p>
+                <p><strong>Red:</strong> docker-compose network</p>
+            </div>
+            <div class="info-card">
+                <h3>📋 Endpoints</h3>
+                <p>GET /api - Mensaje del backend</p>
+                <p><strong>Respuesta:</strong> JSON</p>
+            </div>
+        </div>
+    </div>
+
+    <script>
+        // Función para verificar el estado del backend
+        async function checkBackendStatus() {
+            const statusIndicator = document.getElementById('status-indicator');
+            const statusText = document.getElementById('status-text');
+            
+            statusIndicator.className = 'status-indicator status-checking';
+            statusText.textContent = 'Verificando...';
+            
+            try {
+                const response = await fetch('http://localhost:3000/api');
+                if (response.ok) {
+                    statusIndicator.className = 'status-indicator status-online';
+                    statusText.textContent = 'Backend Online ✅';
+                } else {
+                    throw new Error('Backend no disponible');
+                }
+            } catch (error) {
+                statusIndicator.className = 'status-indicator status-offline';
+                statusText.textContent = 'Backend Offline ❌';
+            }
+        }
+
+        // Función para probar la conexión con el backend
+        async function testBackend() {
+            const btn = document.getElementById('testBtn');
+            const response = document.getElementById('response');
+            
+            // Deshabilitar botón y mostrar estado de carga
+            btn.disabled = true;
+            btn.textContent = '⏳ Conectando...';
+            response.className = 'response loading';
+            response.innerHTML = '⏳ Realizando petición al backend...';
+            
+            try {
+                const startTime = Date.now();
+                const apiResponse = await fetch('http://localhost:3000/api');
+                const endTime = Date.now();
+                const responseTime = endTime - startTime;
+                
+                if (!apiResponse.ok) {
+                    throw new Error(`Error HTTP: ${apiResponse.status}`);
+                }
+                
+                const data = await apiResponse.json();
+                
+                // Mostrar respuesta exitosa
+                response.className = 'response success';
+                response.innerHTML = `
+                    <h4>✅ Conexión Exitosa!</h4>
+                    <p><strong>Mensaje del Backend:</strong> ${data.message}</p>
+                    <p><strong>Tiempo de respuesta:</strong> ${responseTime}ms</p>
+                    <p><strong>Estado HTTP:</strong> ${apiResponse.status} ${apiResponse.statusText}</p>
+                    <pre style="margin-top: 10px; background: #f0f0f0; padding: 10px; border-radius: 5px;">${JSON.stringify(data, null, 2)}</pre>
+                `;
+                
+                // Actualizar estado del backend
+                checkBackendStatus();
+                
+            } catch (error) {
+                // Mostrar error
+                response.className = 'response error';
+                response.innerHTML = `
+                    <h4>❌ Error de Conexión</h4>
+                    <p><strong>Error:</strong> ${error.message}</p>
+                    <p><strong>Posibles causas:</strong></p>
+                    <ul style="margin-left: 20px; margin-top: 10px;">
+                        <li>El backend no está ejecutándose</li>
+                        <li>Problema de configuración de red</li>
+                        <li>El puerto 3000 no está disponible</li>
+                        <li>Problema de CORS (Cross-Origin)</li>
+                    </ul>
+                    <p style="margin-top: 10px;"><strong>Solución:</strong> Ejecuta <code>docker-compose up</code> para levantar todos los servicios.</p>
+                `;
+                
+                // Actualizar estado del backend
+                checkBackendStatus();
+            } finally {
+                // Rehabilitar botón
+                btn.disabled = false;
+                btn.textContent = '📡 Hacer Petición al Backend';
+            }
+        }
+
+        // Verificar estado del backend al cargar la página
+        document.addEventListener('DOMContentLoaded', function() {
+            checkBackendStatus();
+            
+            // Verificar estado cada 30 segundos
+            setInterval(checkBackendStatus, 30000);
+        });
+
+        // Función para hacer petición cada cierto tiempo (opcional)
+        function startAutoTest() {
+            setInterval(testBackend, 10000); // Cada 10 segundos
+        }
+    </script>
+</body>
+</html>
