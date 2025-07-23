@@ -48,18 +48,18 @@ scrape_configs:
     scrape_interval: 15s
     metrics_path: /metrics
 
+  # Demo App - Aplicación de demostración con métricas personalizadas
+  - job_name: 'demo-app'
+    static_configs:
+      - targets: ['demo-app:8000']
+    scrape_interval: 10s
+    scrape_timeout: 5s
+    metrics_path: /metrics
+
   # Grafana - Métricas de la plataforma de visualización
   - job_name: 'grafana'
     static_configs:
       - targets: ['grafana:3000']
     scrape_interval: 30s
     metrics_path: /metrics
-
-  # Aplicación de demo - Métricas personalizadas
-  - job_name: 'demo-app'
-    static_configs:
-      - targets: ['demo-app:8000']
-    scrape_interval: 15s
-    metrics_path: /metrics
-    scrape_timeout: 10s
 

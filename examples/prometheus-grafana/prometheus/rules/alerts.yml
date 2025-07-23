@@ -70,3 +70,66 @@ groups:
         annotations:
           summary: "Prometheus target {{ $labels.instance }} is down"
           description: "Prometheus target {{ $labels.instance }} has been down for more than 1 minute."
+
+  # Grupo de alertas para testing del webhook
+  - name: webhook-testing
+    rules:
+      # Alerta que se activa fácilmente para probar webhook
+      - alert: WebhookTestAlert
+        expr: demo_app_requests_total > 3
+        for: 5s
+        labels:
+          severity: info
+          team: demo
+          alert_type: test
+        annotations:
+          summary: "Alerta de prueba para webhook"
+          description: "Esta alerta se activa cuando demo_app_requests_total > 3. Valor actual: {{ $value }}"
+
+      # Alerta para cuando la demo app recibe muchas peticiones
+      - alert: DemoAppHighTraffic
+        expr: rate(demo_app_requests_total[1m]) > 0.1
+        for: 30s
+        labels:
+          severity: warning
+          team: demo
+          alert_type: traffic
+        annotations:
+          summary: "Alto tráfico en Demo App"
+          description: "La Demo App está recibiendo más de 0.1 requests/segundo. Rate actual: {{ $value }}"
+
+      # Alerta para CPU alto en demo app
+      - alert: DemoAppHighCPU
+        expr: demo_app_cpu_usage > 50
+        for: 30s
+        labels:
+          severity: warning
+          team: demo
+          alert_type: performance
+        annotations:
+          summary: "Alto uso de CPU en Demo App"
+          description: "La Demo App reporta un uso de CPU > 50%. Valor actual: {{ $value }}%"
+
+      # Alerta para memoria alta en demo app
+      - alert: DemoAppHighMemory
+        expr: demo_app_memory_usage > 80
+        for: 30s
+        labels:
+          severity: warning
+          team: demo
+          alert_type: performance
+        annotations:
+          summary: "Alto uso de memoria en Demo App"
+          description: "La Demo App reporta un uso de memoria > 80%. Valor actual: {{ $value }}%"
+
+      # Alerta que siempre está activa para testing
+      - alert: AlwaysFireAlert
+        expr: vector(1)
+        for: 10s
+        labels:
+          severity: info
+          team: demo
+          alert_type: always_on
+        annotations:
+          summary: "Alerta que siempre está activa"
+          description: "Esta alerta está diseñada para estar siempre activa para probar el webhook continuamente."
