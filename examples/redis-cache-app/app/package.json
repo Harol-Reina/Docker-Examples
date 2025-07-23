@@ -1,0 +1,36 @@
+{
+  "name": "redis-cache-app",
+  "version": "1.0.0",
+  "description": "Aplicación Node.js con Redis para caching y sesiones",
+  "main": "app.js",
+  "scripts": {
+    "start": "node app.js",
+    "dev": "nodemon app.js",
+    "test": "echo \"Error: no test specified\" && exit 1"
+  },
+  "keywords": [
+    "redis",
+    "cache",
+    "express",
+    "docker",
+    "sessions",
+    "node"
+  ],
+  "author": "Harol Reina",
+  "license": "MIT",
+  "dependencies": {
+    "express": "^4.18.2",
+    "redis": "^4.6.7",
+    "express-session": "^1.17.3",
+    "connect-redis": "^7.1.0",
+    "axios": "^1.5.0",
+    "cors": "^2.8.5",
+    "dotenv": "^16.3.1"
+  },
+  "devDependencies": {
+    "nodemon": "^3.0.1"
+  },
+  "engines": {
+    "node": ">=18.0.0"
+  }
+}

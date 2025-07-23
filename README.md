@@ -63,6 +63,25 @@ Docker-Examples/
   - Nivel: Intermedio-Avanzado
   - Aprende: Persistencia de datos, API REST, ODM
 
+- **[Flask + PostgreSQL](./examples/flask-postgres-app/)**: Aplicación web Python con base de datos relacional
+  - Tecnologías: Python, Flask, PostgreSQL, SQLAlchemy
+  - Nivel: Intermedio-Avanzado
+  - Aprende: ORM, migraciones, SQL relacional
+
+### Aplicaciones Frontend
+
+- **[React + Nginx](./examples/react-nginx/)**: SPA React con build optimizado y servidor Nginx
+  - Tecnologías: React, Nginx, Multi-stage Docker build
+  - Nivel: Intermedio
+  - Aprende: Builds de producción, optimización de imágenes
+
+### Aplicaciones con Cache y Mensajería
+
+- **[Redis Cache App](./examples/redis-cache-app/)**: Sistema completo de cache, sesiones y pub/sub
+  - Tecnologías: Node.js, Redis, Redis Commander
+  - Nivel: Intermedio-Avanzado
+  - Aprende: Cache strategies, sesiones, leaderboards, pub/sub, analytics
+
 ## 🎯 Casos de Uso
 
 Esta sección contendrá casos de uso más avanzados y específicos para diferentes escenarios.
