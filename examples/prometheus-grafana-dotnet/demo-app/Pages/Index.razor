@@ -1,0 +1,262 @@
+@page "/"
+@using DemoApp.Models
+@using DemoApp.Services
+@inject AlertStorage AlertStorage
+@inject IMetricsService MetricsService
+@inject IJSRuntime JSRuntime
+
+<PageTitle>Demo App - Prometheus Metrics</PageTitle>
+
+<div class="container-fluid">
+    <div class="row">
+        <div class="col-12">
+            <div class="text-center mb-4">
+                <h1 class="display-4">📊 Demo App .NET</h1>
+                <p class="lead">Aplicación de demostración para métricas de Prometheus con Blazor Server</p>
+                <div class="badge bg-primary fs-6">ASP.NET Core 8.0 + Blazor Server</div>
+            </div>
+        </div>
+    </div>
+
+    <div class="row mb-4">
+        <div class="col-md-3">
+            <div class="card text-center">
+                <div class="card-body">
+                    <h5 class="card-title text-primary">📈 Total Alerts</h5>
+                    <h2 class="text-primary">@alertStats.Total</h2>
+                </div>
+            </div>
+        </div>
+        <div class="col-md-3">
+            <div class="card text-center">
+                <div class="card-body">
+                    <h5 class="card-title text-danger">🔥 Firing</h5>
+                    <h2 class="text-danger">@alertStats.Firing</h2>
+                </div>
+            </div>
+        </div>
+        <div class="col-md-3">
+            <div class="card text-center">
+                <div class="card-body">
+                    <h5 class="card-title text-success">✅ Resolved</h5>
+                    <h2 class="text-success">@alertStats.Resolved</h2>
+                </div>
+            </div>
+        </div>
+        <div class="col-md-3">
+            <div class="card text-center">
+                <div class="card-body">
+                    <h5 class="card-title text-info">🕒 Last Alert</h5>
+                    <small class="text-muted">
+                        @(alertStats.LastReceived?.ToString("HH:mm:ss") ?? "N/A")
+                    </small>
+                </div>
+            </div>
+        </div>
+    </div>
+
+    <div class="row mb-4">
+        <div class="col-12">
+            <div class="card">
+                <div class="card-header">
+                    <h5>🎯 Endpoints Disponibles</h5>
+                </div>
+                <div class="card-body">
+                    <div class="row">
+                        <div class="col-md-6">
+                            <h6>📊 Métricas y Monitoreo</h6>
+                            <ul class="list-unstyled">
+                                <li><code>GET /metrics</code> - Métricas para Prometheus</li>
+                                <li><code>GET /health</code> - Health check</li>
+                                <li><a href="/alerts" class="text-decoration-none">GET /alerts</a> - Dashboard de alertas</li>
+                                <li><code>GET /api/alerts</code> - API de alertas JSON</li>
+                            </ul>
+                        </div>
+                        <div class="col-md-6">
+                            <h6>🧪 Simulación para Testing</h6>
+                            <ul class="list-unstyled">
+                                <li><code>GET /api/simulate/load</code> - Simular carga</li>
+                                <li><code>GET /api/simulate/error</code> - Simular errores</li>
+                                <li><code>GET /api/simulate/cpu/{seconds}</code> - Simular CPU</li>
+                                <li><code>GET /api/simulate/memory</code> - Simular memoria</li>
+                            </ul>
+                        </div>
+                    </div>
+                </div>
+            </div>
+        </div>
+    </div>
+
+    <div class="row mb-4">
+        <div class="col-12">
+            <div class="card">
+                <div class="card-header">
+                    <h5>🧪 Controles de Simulación</h5>
+                </div>
+                <div class="card-body">
+                    <div class="row">
+                        <div class="col-md-3 mb-2">
+                            <button class="btn btn-primary w-100" @onclick="SimulateLoad">
+                                📈 Simular Carga
+                            </button>
+                        </div>
+                        <div class="col-md-3 mb-2">
+                            <button class="btn btn-warning w-100" @onclick="SimulateError">
+                                ⚠️ Simular Error
+                            </button>
+                        </div>
+                        <div class="col-md-3 mb-2">
+                            <button class="btn btn-danger w-100" @onclick="SimulateCpu">
+                                🔥 Simular CPU
+                            </button>
+                        </div>
+                        <div class="col-md-3 mb-2">
+                            <button class="btn btn-info w-100" @onclick="SimulateMemory">
+                                🧠 Simular Memoria
+                            </button>
+                        </div>
+                    </div>
+                    
+                    @if (!string.IsNullOrEmpty(lastAction))
+                    {
+                        <div class="alert alert-info mt-3">
+                            <strong>Última acción:</strong> @lastAction
+                        </div>
+                    }
+                </div>
+            </div>
+        </div>
+    </div>
+
+    <div class="row">
+        <div class="col-12">
+            <div class="card">
+                <div class="card-header d-flex justify-content-between align-items-center">
+                    <h5>🔗 Enlaces Útiles</h5>
+                    <button class="btn btn-sm btn-outline-primary" @onclick="RefreshStats">
+                        🔄 Actualizar
+                    </button>
+                </div>
+                <div class="card-body">
+                    <div class="row">
+                        <div class="col-md-4">
+                            <h6>🔍 Prometheus Stack</h6>
+                            <ul class="list-unstyled">
+                                <li><a href="http://localhost:9090" target="_blank" class="text-decoration-none">Prometheus</a></li>
+                                <li><a href="http://localhost:3000" target="_blank" class="text-decoration-none">Grafana</a></li>
+                                <li><a href="http://localhost:9093" target="_blank" class="text-decoration-none">AlertManager</a></li>
+                            </ul>
+                        </div>
+                        <div class="col-md-4">
+                            <h6>📊 Monitoring</h6>
+                            <ul class="list-unstyled">
+                                <li><a href="http://localhost:9100" target="_blank" class="text-decoration-none">Node Exporter</a></li>
+                                <li><a href="http://localhost:8080" target="_blank" class="text-decoration-none">cAdvisor</a></li>
+                            </ul>
+                        </div>
+                        <div class="col-md-4">
+                            <h6>🎯 Esta Aplicación</h6>
+                            <ul class="list-unstyled">
+                                <li><a href="/metrics" target="_blank" class="text-decoration-none">Métricas</a></li>
+                                <li><a href="/health" target="_blank" class="text-decoration-none">Health Check</a></li>
+                                <li><a href="/alerts" class="text-decoration-none">Dashboard Alertas</a></li>
+                            </ul>
+                        </div>
+                    </div>
+                </div>
+            </div>
+        </div>
+    </div>
+</div>
+
+@code {
+    private AlertStats alertStats = new();
+    private string lastAction = string.Empty;
+    private Timer? refreshTimer;
+
+    protected override async Task OnInitializedAsync()
+    {
+        await RefreshStats();
+        
+        // Auto-refresh every 30 seconds
+        refreshTimer = new Timer(async _ => 
+        {
+            await InvokeAsync(async () =>
+            {
+                await RefreshStats();
+                StateHasChanged();
+            });
+        }, null, TimeSpan.Zero, TimeSpan.FromSeconds(30));
+    }
+
+    private async Task RefreshStats()
+    {
+        alertStats = AlertStorage.GetStats();
+        await Task.CompletedTask;
+    }
+
+    private async Task SimulateLoad()
+    {
+        try
+        {
+            using var httpClient = new HttpClient();
+            var response = await httpClient.GetAsync("http://localhost:8000/api/simulate/load");
+            lastAction = $"Carga simulada - {DateTime.Now:HH:mm:ss}";
+            MetricsService.IncrementSimulationCounter("load");
+        }
+        catch (Exception ex)
+        {
+            lastAction = $"Error: {ex.Message}";
+        }
+    }
+
+    private async Task SimulateError()
+    {
+        try
+        {
+            using var httpClient = new HttpClient();
+            var response = await httpClient.GetAsync("http://localhost:8000/api/simulate/error");
+            lastAction = $"Error simulado - {DateTime.Now:HH:mm:ss}";
+            MetricsService.IncrementSimulationCounter("error");
+        }
+        catch (Exception ex)
+        {
+            lastAction = $"Error: {ex.Message}";
+        }
+    }
+
+    private async Task SimulateCpu()
+    {
+        try
+        {
+            using var httpClient = new HttpClient();
+            var response = await httpClient.GetAsync("http://localhost:8000/api/simulate/cpu/5");
+            lastAction = $"CPU simulado por 5 segundos - {DateTime.Now:HH:mm:ss}";
+            MetricsService.IncrementSimulationCounter("cpu");
+        }
+        catch (Exception ex)
+        {
+            lastAction = $"Error: {ex.Message}";
+        }
+    }
+
+    private async Task SimulateMemory()
+    {
+        try
+        {
+            using var httpClient = new HttpClient();
+            var response = await httpClient.GetAsync("http://localhost:8000/api/simulate/memory");
+            lastAction = $"Memoria simulada - {DateTime.Now:HH:mm:ss}";
+            MetricsService.IncrementSimulationCounter("memory");
+        }
+        catch (Exception ex)
+        {
+            lastAction = $"Error: {ex.Message}";
+        }
+    }
+
+    public void Dispose()
+    {
+        refreshTimer?.Dispose();
+    }
+}

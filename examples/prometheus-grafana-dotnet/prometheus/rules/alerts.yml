@@ -1,0 +1,135 @@
+groups:
+  - name: docker-monitoring
+    rules:
+      # Alerta cuando un contenedor está caído
+      - alert: ContainerDown
+        expr: up == 0
+        for: 30s
+        labels:
+          severity: critical
+        annotations:
+          summary: "Container {{ $labels.instance }} is down"
+          description: "Container {{ $labels.instance }} has been down for more than 30 seconds."
+
+      # Alerta por alto uso de CPU
+      - alert: HighCpuUsage
+        expr: 100 - (avg by(instance) (rate(node_cpu_seconds_total{mode="idle"}[2m])) * 100) > 80
+        for: 2m
+        labels:
+          severity: warning
+        annotations:
+          summary: "High CPU usage on {{ $labels.instance }}"
+          description: "CPU usage is above 80% for more than 2 minutes on {{ $labels.instance }}."
+
+      # Alerta por alto uso de memoria
+      - alert: HighMemoryUsage
+        expr: (1 - (node_memory_MemAvailable_bytes / node_memory_MemTotal_bytes)) * 100 > 85
+        for: 2m
+        labels:
+          severity: warning
+        annotations:
+          summary: "High memory usage on {{ $labels.instance }}"
+          description: "Memory usage is above 85% for more than 2 minutes on {{ $labels.instance }}."
+
+      # Alerta por poco espacio en disco
+      - alert: LowDiskSpace
+        expr: (1 - (node_filesystem_avail_bytes{fstype!="tmpfs"} / node_filesystem_size_bytes{fstype!="tmpfs"})) * 100 > 90
+        for: 1m
+        labels:
+          severity: critical
+        annotations:
+          summary: "Low disk space on {{ $labels.instance }}"
+          description: "Disk space usage is above 90% on {{ $labels.instance }} ({{ $labels.mountpoint }})."
+
+      # Alerta por contenedor usando mucha CPU
+      - alert: ContainerHighCpuUsage
+        expr: rate(container_cpu_usage_seconds_total{name!=""}[1m]) > 0.8
+        for: 2m
+        labels:
+          severity: warning
+        annotations:
+          summary: "Container {{ $labels.name }} high CPU usage"
+          description: "Container {{ $labels.name }} CPU usage is above 80% for more than 2 minutes."
+
+      # Alerta por contenedor usando mucha memoria
+      - alert: ContainerHighMemoryUsage
+        expr: (container_memory_usage_bytes{name!=""} / container_spec_memory_limit_bytes{name!=""}) > 0.8
+        for: 2m
+        labels:
+          severity: warning
+        annotations:
+          summary: "Container {{ $labels.name }} high memory usage"
+          description: "Container {{ $labels.name }} memory usage is above 80% for more than 2 minutes."
+
+      # Alerta cuando Prometheus no puede hacer scraping
+      - alert: PrometheusTargetDown
+        expr: up{job!="prometheus"} == 0
+        for: 1m
+        labels:
+          severity: critical
+        annotations:
+          summary: "Prometheus target {{ $labels.instance }} is down"
+          description: "Prometheus target {{ $labels.instance }} has been down for more than 1 minute."
+
+  # Grupo de alertas para testing del webhook
+  - name: webhook-testing
+    rules:
+      # Alerta que se activa fácilmente para probar webhook
+      - alert: WebhookTestAlert
+        expr: demo_app_requests_total > 3
+        for: 5s
+        labels:
+          severity: info
+          team: demo
+          alert_type: test
+        annotations:
+          summary: "Alerta de prueba para webhook"
+          description: "Esta alerta se activa cuando demo_app_requests_total > 3. Valor actual: {{ $value }}"
+
+      # Alerta para cuando la demo app recibe muchas peticiones
+      - alert: DemoAppHighTraffic
+        expr: rate(demo_app_requests_total[1m]) > 0.1
+        for: 30s
+        labels:
+          severity: warning
+          team: demo
+          alert_type: traffic
+        annotations:
+          summary: "Alto tráfico en Demo App"
+          description: "La Demo App está recibiendo más de 0.1 requests/segundo. Rate actual: {{ $value }}"
+
+      # Alerta para CPU alto en demo app
+      - alert: DemoAppHighCPU
+        expr: demo_app_cpu_usage > 50
+        for: 30s
+        labels:
+          severity: warning
+          team: demo
+          alert_type: performance
+        annotations:
+          summary: "Alto uso de CPU en Demo App"
+          description: "La Demo App reporta un uso de CPU > 50%. Valor actual: {{ $value }}%"
+
+      # Alerta para memoria alta en demo app
+      - alert: DemoAppHighMemory
+        expr: demo_app_memory_usage > 80
+        for: 30s
+        labels:
+          severity: warning
+          team: demo
+          alert_type: performance
+        annotations:
+          summary: "Alto uso de memoria en Demo App"
+          description: "La Demo App reporta un uso de memoria > 80%. Valor actual: {{ $value }}%"
+
+      # Alerta que siempre está activa para testing
+      - alert: AlwaysFireAlert
+        expr: vector(1)
+        for: 10s
+        labels:
+          severity: info
+          team: demo
+          alert_type: always_on
+        annotations:
+          summary: "Alerta que siempre está activa"
+          description: "Esta alerta está diseñada para estar siempre activa para probar el webhook continuamente."

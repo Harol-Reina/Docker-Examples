@@ -1,0 +1,65 @@
+# Configuración global de Prometheus
+global:
+  scrape_interval: 15s          # Intervalo de recolección de métricas
+  evaluation_interval: 15s      # Intervalo de evaluación de reglas
+  external_labels:
+    monitor: 'docker-monitoring'
+    environment: 'development'
+
+# Configuración de AlertManager
+alerting:
+  alertmanagers:
+    - static_configs:
+        - targets:
+          - alertmanager:9093
+
+# Archivos de reglas de alertas
+rule_files:
+  - "rules/*.yml"
+
+# Configuración de trabajos de scraping
+scrape_configs:
+  # Prometheus auto-monitoreo
+  - job_name: 'prometheus'
+    static_configs:
+      - targets: ['localhost:9090']
+    scrape_interval: 5s
+    metrics_path: /metrics
+
+  # Node Exporter - Métricas del sistema
+  - job_name: 'node-exporter'
+    static_configs:
+      - targets: ['node-exporter:9100']
+    scrape_interval: 30s
+    scrape_timeout: 10s
+    metrics_path: /metrics
+
+  # cAdvisor - Métricas de contenedores Docker
+  - job_name: 'cadvisor'
+    static_configs:
+      - targets: ['cadvisor:8080']
+    scrape_interval: 10s
+    metrics_path: /metrics
+
+  # AlertManager - Métricas del gestor de alertas
+  - job_name: 'alertmanager'
+    static_configs:
+      - targets: ['alertmanager:9093']
+    scrape_interval: 15s
+    metrics_path: /metrics
+
+  # Demo App .NET - Aplicación de demostración con métricas personalizadas
+  - job_name: 'demo-app-dotnet'
+    static_configs:
+      - targets: ['demo-app-dotnet:8000']
+    scrape_interval: 10s
+    scrape_timeout: 5s
+    metrics_path: /metrics
+
+  # Grafana - Métricas de la plataforma de visualización
+  - job_name: 'grafana'
+    static_configs:
+      - targets: ['grafana:3000']
+    scrape_interval: 30s
+    metrics_path: /metrics
+

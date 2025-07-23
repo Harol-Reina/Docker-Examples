@@ -1,0 +1,261 @@
+@page "/alerts"
+@using DemoApp.Models
+@inject AlertStorage AlertStorage
+@inject IJSRuntime JSRuntime
+
+<div class="container-fluid">
+    <div class="row">
+        <div class="col-12">
+            <div class="text-center mb-4">
+                <h1 class="display-4">🚨 Dashboard de Alertas</h1>
+                <p class="lead">AlertManager Webhook - Gestión de alertas en tiempo real</p>
+            </div>
+        </div>
+    </div>
+
+    <!-- Stats Cards -->
+    <div class="row mb-4">
+        <div class="col-md-3">
+            <div class="card border-primary">
+                <div class="card-body text-center">
+                    <h2 class="text-primary">@alertStats.Total</h2>
+                    <h6 class="card-title">📊 Total</h6>
+                    <small class="text-muted">Alertas recibidas</small>
+                </div>
+            </div>
+        </div>
+        <div class="col-md-3">
+            <div class="card border-danger">
+                <div class="card-body text-center">
+                    <h2 class="text-danger">@alertStats.Firing</h2>
+                    <h6 class="card-title">🔥 Activas</h6>
+                    <small class="text-muted">En estado firing</small>
+                </div>
+            </div>
+        </div>
+        <div class="col-md-3">
+            <div class="card border-success">
+                <div class="card-body text-center">
+                    <h2 class="text-success">@alertStats.Resolved</h2>
+                    <h6 class="card-title">✅ Resueltas</h6>
+                    <small class="text-muted">Estado resolved</small>
+                </div>
+            </div>
+        </div>
+        <div class="col-md-3">
+            <div class="card border-info">
+                <div class="card-body text-center">
+                    <h6 class="card-title">🕒 Última Recibida</h6>
+                    <small class="text-info">
+                        @(alertStats.LastReceived?.ToString("dd/MM HH:mm:ss") ?? "N/A")
+                    </small>
+                </div>
+            </div>
+        </div>
+    </div>
+
+    <!-- Controls -->
+    <div class="row mb-3">
+        <div class="col-md-8">
+            <div class="btn-group" role="group">
+                <input type="radio" class="btn-check" name="filter" id="filter-all" checked="@(filterStatus == "all")" @onchange="@(() => SetFilter("all"))" />
+                <label class="btn btn-outline-primary" for="filter-all">Todas (@alerts.Count)</label>
+                
+                <input type="radio" class="btn-check" name="filter" id="filter-firing" checked="@(filterStatus == "firing")" @onchange="@(() => SetFilter("firing"))" />
+                <label class="btn btn-outline-danger" for="filter-firing">Activas (@alerts.Count(a => a.Status == "firing"))</label>
+                
+                <input type="radio" class="btn-check" name="filter" id="filter-resolved" checked="@(filterStatus == "resolved")" @onchange="@(() => SetFilter("resolved"))" />
+                <label class="btn btn-outline-success" for="filter-resolved">Resueltas (@alerts.Count(a => a.Status == "resolved"))</label>
+            </div>
+        </div>
+        <div class="col-md-4 text-end">
+            <button class="btn btn-outline-secondary me-2" @onclick="RefreshAlerts">
+                🔄 Actualizar
+            </button>
+            <button class="btn btn-outline-danger" @onclick="ClearAlerts">
+                🗑️ Limpiar
+            </button>
+        </div>
+    </div>
+
+    <!-- Alerts List -->
+    <div class="row">
+        <div class="col-12">
+            @if (filteredAlerts.Any())
+            {
+                @foreach (var alert in filteredAlerts.Take(50)) // Show only first 50
+                {
+                    <div class="card mb-3 @GetAlertCardClass(alert.Status)">
+                        <div class="card-header d-flex justify-content-between align-items-center">
+                            <div>
+                                <strong>@(alert.Labels.GetValueOrDefault("alertname", "Unknown Alert"))</strong>
+                                <span class="badge @GetStatusBadgeClass(alert.Status) ms-2">
+                                    @alert.Status.ToUpper()
+                                </span>
+                                @if (alert.Labels.ContainsKey("severity"))
+                                {
+                                    <span class="badge bg-secondary ms-1">
+                                        @alert.Labels["severity"]
+                                    </span>
+                                }
+                            </div>
+                            <small class="text-muted">
+                                @alert.ReceivedAt.ToString("dd/MM/yyyy HH:mm:ss")
+                            </small>
+                        </div>
+                        <div class="card-body">
+                            @if (alert.Annotations.ContainsKey("summary"))
+                            {
+                                <p class="card-text mb-2">
+                                    <strong>Resumen:</strong> @alert.Annotations["summary"]
+                                </p>
+                            }
+                            @if (alert.Annotations.ContainsKey("description"))
+                            {
+                                <p class="card-text mb-2">
+                                    <strong>Descripción:</strong> @alert.Annotations["description"]
+                                </p>
+                            }
+                            
+                            <!-- Labels -->
+                            @if (alert.Labels.Any())
+                            {
+                                <div class="mb-2">
+                                    <small class="text-muted">Labels:</small><br>
+                                    @foreach (var label in alert.Labels)
+                                    {
+                                        <span class="badge bg-light text-dark me-1 mb-1">
+                                            @label.Key: @label.Value
+                                        </span>
+                                    }
+                                </div>
+                            }
+                            
+                            <div class="row">
+                                <div class="col-md-6">
+                                    <small class="text-muted">
+                                        <strong>Inició:</strong> @alert.StartsAt.ToString("dd/MM/yyyy HH:mm:ss")
+                                    </small>
+                                </div>
+                                @if (alert.EndsAt.HasValue && alert.EndsAt.Value != DateTime.MinValue)
+                                {
+                                    <div class="col-md-6">
+                                        <small class="text-muted">
+                                            <strong>Terminó:</strong> @alert.EndsAt.Value.ToString("dd/MM/yyyy HH:mm:ss")
+                                        </small>
+                                    </div>
+                                }
+                            </div>
+                        </div>
+                    </div>
+                }
+                
+                @if (filteredAlerts.Count > 50)
+                {
+                    <div class="alert alert-info text-center">
+                        Mostrando las primeras 50 alertas de @filteredAlerts.Count total.
+                    </div>
+                }
+            }
+            else
+            {
+                <div class="card">
+                    <div class="card-body text-center py-5">
+                        <h5>📭 No hay alertas</h5>
+                        <p class="text-muted">
+                            @if (filterStatus == "all")
+                            {
+                                <span>No se han recibido alertas aún.</span>
+                            }
+                            else
+                            {
+                                <span>No hay alertas con estado "@filterStatus".</span>
+                            }
+                        </p>
+                        <a href="/" class="btn btn-primary">
+                            🏠 Ir al Dashboard Principal
+                        </a>
+                    </div>
+                </div>
+            }
+        </div>
+    </div>
+</div>
+
+@code {
+    private List<Alert> alerts = new();
+    private List<Alert> filteredAlerts = new();
+    private AlertStats alertStats = new();
+    private string filterStatus = "all";
+    private Timer? refreshTimer;
+
+    protected override async Task OnInitializedAsync()
+    {
+        await RefreshAlerts();
+        
+        // Auto-refresh every 30 seconds
+        refreshTimer = new Timer(async _ => 
+        {
+            await InvokeAsync(async () =>
+            {
+                await RefreshAlerts();
+                StateHasChanged();
+            });
+        }, null, TimeSpan.Zero, TimeSpan.FromSeconds(30));
+    }
+
+    private async Task RefreshAlerts()
+    {
+        alerts = AlertStorage.GetAlerts();
+        alertStats = AlertStorage.GetStats();
+        ApplyFilter();
+        await Task.CompletedTask;
+    }
+
+    private void SetFilter(string status)
+    {
+        filterStatus = status;
+        ApplyFilter();
+    }
+
+    private void ApplyFilter()
+    {
+        filteredAlerts = filterStatus switch
+        {
+            "firing" => alerts.Where(a => a.Status == "firing").ToList(),
+            "resolved" => alerts.Where(a => a.Status == "resolved").ToList(),
+            _ => alerts
+        };
+    }
+
+    private async Task ClearAlerts()
+    {
+        AlertStorage.ClearAlerts();
+        await RefreshAlerts();
+    }
+
+    private string GetAlertCardClass(string status)
+    {
+        return status switch
+        {
+            "firing" => "border-danger",
+            "resolved" => "border-success",
+            _ => "border-secondary"
+        };
+    }
+
+    private string GetStatusBadgeClass(string status)
+    {
+        return status switch
+        {
+            "firing" => "bg-danger",
+            "resolved" => "bg-success",
+            _ => "bg-secondary"
+        };
+    }
+
+    public void Dispose()
+    {
+        refreshTimer?.Dispose();
+    }
+}
