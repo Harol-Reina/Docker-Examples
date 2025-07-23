@@ -1,0 +1,59 @@
+<!DOCTYPE html>
+<html lang="es">
+  <head>
+    <meta charset="utf-8" />
+    <link rel="icon" href="%PUBLIC_URL%/favicon.ico" />
+    <meta name="viewport" content="width=device-width, initial-scale=1" />
+    <meta name="theme-color" content="#667eea" />
+    <meta name="description" content="Aplicación React con Nginx containerizada con Docker - Ejemplo práctico de desarrollo frontend moderno" />
+    <meta name="keywords" content="React, Docker, Nginx, Frontend, JavaScript, Containerización" />
+    <meta name="author" content="Harol Reina" />
+    
+    <!-- Open Graph / Facebook -->
+    <meta property="og:type" content="website" />
+    <meta property="og:url" content="http://localhost:3000/" />
+    <meta property="og:title" content="React + Nginx Docker App" />
+    <meta property="og:description" content="Una demostración de aplicación React servida por Nginx y containerizada con Docker" />
+    
+    <!-- Twitter -->
+    <meta property="twitter:card" content="summary_large_image" />
+    <meta property="twitter:url" content="http://localhost:3000/" />
+    <meta property="twitter:title" content="React + Nginx Docker App" />
+    <meta property="twitter:description" content="Una demostración de aplicación React servida por Nginx y containerizada con Docker" />
+    
+    <link rel="apple-touch-icon" href="%PUBLIC_URL%/logo192.png" />
+    <link rel="manifest" href="%PUBLIC_URL%/manifest.json" />
+    
+    <title>React + Nginx Docker App</title>
+    
+    <!-- Preload critical fonts -->
+    <link rel="preconnect" href="https://fonts.googleapis.com">
+    <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
+  </head>
+  <body>
+    <noscript>
+      <div style="padding: 2rem; text-align: center; font-family: Arial, sans-serif;">
+        <h1>🚫 JavaScript Requerido</h1>
+        <p>Esta aplicación requiere JavaScript para funcionar correctamente.</p>
+        <p>Por favor, habilita JavaScript en tu navegador y recarga la página.</p>
+      </div>
+    </noscript>
+    <div id="root"></div>
+    
+    <!-- Loading animation while React loads -->
+    <style>
+      #root:empty::before {
+        content: "🚀 Cargando aplicación React...";
+        display: flex;
+        justify-content: center;
+        align-items: center;
+        height: 100vh;
+        font-family: Arial, sans-serif;
+        font-size: 1.2rem;
+        color: #667eea;
+        background: linear-gradient(135deg, #667eea 0%, #764ba2 100%);
+        color: white;
+      }
+    </style>
+  </body>
+</html>
